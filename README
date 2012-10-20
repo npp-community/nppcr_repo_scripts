@@ -1,0 +1,57 @@
+Update Scripts
+--------------
+These are the scripts used for keeping the git mirror of Notepad++'s Subversion
+and for processing that mirror into a whitespace normalized and binary cleaned
+version.
+
+"Keychain" is used to provide access to the password protected authorization key.
+
+~/.bash_profile contains the keychain startup.
+
+	# Source keychain for github
+	/usr/bin/keychain $HOME/.ssh/id_dsa
+
+	# Allow password-less cron ssh
+	source $HOME/.keychain/$HOSTNAME-sh
+
+All files and scripts, the repos, and keychain are under the users /home, which
+is simply `nppgit` for this project.
+
+Contents
+|
+|-- cron
+|   `-- npp_mirror_and_fix.sh
+	# Evals git scripts and does final push.
+|
+`-- git
+    |-- npp_final_cleanup.sh
+	# Filter-branch script to rewrite-history for push to public repo.
+	# Removes identified binaries from history.
+	# Cleans up commit message formatting and git-svn id numbers.
+
+    |-- npp_svn_mirror_update.sh
+	# Script to keep a local bare git-svn svn mirror repo up to date.
+
+    |-- npp_ws_fix_trunk.sh       <- main cleaning routines.
+	# Rewrite a branch that does not comply with a whitespace policy
+	# into one that does.
+
+    `-- wsfix.sh
+	# Filter-branch script for --whitespace=fix fixing.
+
+
+The script will attempt to reset itself and can always be manually reset using
+`git update-ref` to reset the refs that are incorrect.  With cron setup to email
+the sysout then simply resetting the refs to the refs shown on the last successful
+run should do the trick, and if not then setting the refs for dirty and clean
+branches and the .git/cache_file.XXX using update-ref will force the script to
+reprocess the whole history.
+
+These scripts have been in use for the NPPCR project since 2009 with three outages.
+The first being when the upstream SVN changed locations which recovered just by
+changing the upstream URL, and when the host VPS was migrated which was recovered
+by simply logging in, and then when github had a key scare which was recovered by
+setting a key.  The key issue also ended up leaving the local and remote clean
+repo out of synch which was corrected by updating the ref to the parent of the last
+known good one on the remote.
+
